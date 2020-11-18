@@ -1,6 +1,6 @@
 #!/bin/bash
 #Maintained by Ruben Calzadilla
-#version 1.9
+#version 1.91
 #VideoFlow DVG or Linux
 #Dependancy: FFmpeg
 #Creates a UDP stream with Customized SMPTE Color Bars and one audio pair for testing
@@ -236,11 +236,16 @@ createStream () {
 }
 
 deleteStream () {
-	echo "What is the exisiting Stream IP Output that you want to Stop: "
-    read IPO
-    echo "What is the existing Stream PORT Output that you want to Stop: "
-    read PO
+    if [ $nst -eq 1 ]; then
+        let nn=1
+    else
+        echo "Which Stream do you want to Stop, enter the number as listed above: "
+        read nn
+        nn=$(echo $nn | awk '{print $1*1}')
+    fi
     echo " "
+    IPO=$(echo ${IPO[$nn]})
+    PO=$(echo ${PO[$nn]})
     echo "Stoping a Video Stream using [ ${IPO}:${PO} ]"
     echo "Press Y/y to stop the stream or N/n to exit"
     read ANS
@@ -277,6 +282,8 @@ listStreams () {
     for (( cint=1 ; cint<=${nst} ; cint++ ))
     do
     echo "${cint}: ${strms[$cint - 1]} at ${mbps[$cint - 1]}Mbps"
+    IPO[$cint]=$(echo ${strms[$cint - 1]} | cut -d\: -f2 | cut -d\/ -f3)
+    PO[$cint]=$(echo ${strms[$cint - 1]} | cut -d\: -f3)
     done
     echo " "
 }
