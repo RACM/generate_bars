@@ -1,5 +1,7 @@
 #!/bin/bash
 #Maintained by Ruben Calzadilla
+#Intelsat
+#IDFM Team: Rob Read and Tyler Moeller
 #version 1.91
 #VideoFlow DVG or Linux
 #Dependancy: FFmpeg
@@ -28,7 +30,7 @@ else
     echo " "
     echo "Wrong system parameter, options are dvp or lnx"
     echo " "
-    exit 23
+    exit 5
 fi
 
 #Functions Declaration
