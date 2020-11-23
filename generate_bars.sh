@@ -34,7 +34,7 @@ else
     echo " "
     echo "Wrong system parameter, options are dvp or lnx"
     echo " "
-    exit 23
+    exit 5
 fi
 
 #Functions Declaration
@@ -290,9 +290,9 @@ listStreams () {
 
     for (( cint=1 ; cint<=${nst} ; cint++ ))
     do
-    echo "${cint}: ${strms[$cint - 1]} at ${mbps[$cint - 1]}Mbps"
-    IPO[$cint]=$(echo ${strms[$cint - 1]} | cut -d\: -f2 | cut -d\/ -f3)
-    PO[$cint]=$(echo ${strms[$cint - 1]} | cut -d\: -f3)
+        echo "${cint}: ${strms[$cint - 1]} at ${mbps[$cint - 1]}Mbps"
+        IPO[$cint]=$(echo ${strms[$cint - 1]} | cut -d\: -f2 | cut -d\/ -f3)
+        PO[$cint]=$(echo ${strms[$cint - 1]} | cut -d\: -f3)
     done
     echo " "
 }
@@ -300,8 +300,8 @@ listStreams () {
 
 if [[ "$opt" == "-c" ]]; then
     clear
-	createStream
-	exit 0
+    createStream
+    exit 0
 elif [[ "$opt" == "-d" ]]; then
     clear
     listStreams
