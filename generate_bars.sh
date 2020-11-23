@@ -1,12 +1,18 @@
 #!/bin/bash
 #Maintained by Ruben Calzadilla
-#version 1.91
+#version 1.92
 #VideoFlow DVG or Linux
 #Dependancy: FFmpeg
 #Creates a UDP stream with Customized SMPTE Color Bars and one audio pair for testing
 #
 #
 
+version="1.92"
+
+#This hash value is used to make the ffmpeg command unique and therefore able to grep on the
+#FFmpeg streams created by this script only. The hash is use on a metadata statement for network id
+#- metadata mpegts_original_network_id="${hash}"
+hash="0x0ACE"
 
 opt=$1
 sys=$2
@@ -50,7 +56,7 @@ ffmpeg_stream () {
 "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans.ttf:fontsize=42:fontcolor=white:text='%{localtime\:%H %M %S}':x=(w-text_w)/2:y=(h-text_h)/2-200",\
 "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf:fontsize=92:fontcolor=${STXC}:text='${STX}':x='w-w/30*mod(t,30*(w+tw)/w)':y=(h-text_h)/2-280" \
 -filter_complex "[1:a][2:a]join=inputs=2[a0]" -map 0:v -map "[a0]" -c:v ${LibEnc} -g ${GOPS} -b:v ${MV}M -minrate ${MV}M -maxrate ${MV}M -muxrate ${MXO}M  -preset veryfast -pix_fmt yuv420p \
--metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
+-metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -metadata mpegts_original_network_id="${hash}" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
     elif [[ $dvp -eq 0 ]]; then
 #For linux system with FFmpeg installed
         ffmpeg -re -fflags +genpts -f lavfi -i smptehdbars=size=${EncRes}:rate=${Frate} -f lavfi -i sine=frequency=440:beep_factor=4 -f lavfi -i sine=frequency=440:beep_factor=4 \
@@ -60,14 +66,14 @@ ffmpeg_stream () {
 "drawtext=fontfile=/usr/share/fonts/truetype/freefont/DejaVuSans.ttf:fontsize=42:fontcolor=white:text='%{localtime\:%H %M %S}':x=(w-text_w)/2:y=(h-text_h)/2-200",\
 "drawtext=fontfile=/usr/share/fonts/truetype/freefont/DejaVuSansBold.ttf:fontsize=92:fontcolor=${STXC}:text='${STX}':x='w-w/30*mod(t,30*(w+tw)/w)':y=(h-text_h)/2-280" \
 -filter_complex "[1:a][2:a]join=inputs=2[a0]" -map 0:v -map "[a0]" -c:v ${LibEnc} -g ${GOPS} -b:v ${MV}M -minrate ${MV}M -maxrate ${MV}M -muxrate ${MXO}M  -preset veryfast -pix_fmt yuv420p \
--metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
+-metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -metadata mpegts_original_network_id="${hash}" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
     fi
     
     echo " "
     echo "Creating the stream ......"
     sleep 4
 
-    PID=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${IPO}:${PO}" | awk '{print $2}'`
+    PID=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | grep -e "${IPO}:${PO}" | awk '{print $2}'`
 
     if [[ -z $PID ]]; then
         echo " "
@@ -85,7 +91,7 @@ ffmpeg_stream () {
 }
 
 ffmpeg_stop () {
-    PID=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${IPO}:${PO}" | awk '{print $2}'`
+    PID=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | grep -e "${IPO}:${PO}" | awk '{print $2}'`
     if [[ -z $PID ]]; then
         echo " "
         echo "ERROR: The FFMPEG stream with IP:Port ${IPO}:${PO} does not exist"
@@ -103,7 +109,8 @@ ffmpeg_stop () {
 createStream () {
     echo " "
     echo "Configuration Parameters for a [ $system ] System"
-    echo "IP Output: "
+    echo " "
+    echo "Stream IP Output: "
     read IPO
     if [[ -z ${IPO} ]]; then
         echo " "
@@ -112,7 +119,7 @@ createStream () {
         exit 5
     fi
 
-    echo "Port Output: "
+    echo "Stream UDP Port: "
     read PO
     if [[ -z ${PO} ]]; then
         echo " "
@@ -131,6 +138,8 @@ createStream () {
     fi
 
     echo " "
+    echo "Encoder Parameters [default]"
+    #echo " "
     printf "Encoder h264 or h265 [h264]: "
     read ENC
     if [[ -z ${ENC} ]]; then
@@ -209,7 +218,7 @@ createStream () {
     echo ${STXC}
 
 
-    PID=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${IPO}:${PO}" | awk '{print $2}'`
+    PID=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | grep -e "${IPO}:${PO}" | awk '{print $2}'`
 
     if ! [[ -z $PID ]]; then
         echo " "
@@ -260,10 +269,10 @@ deleteStream () {
 }
 
 listStreams () {
-    nst=`ps -ef | grep -v grep | grep ffmpeg | awk '{print $57}' | cut -d\? -f1 | wc -l | awk '{print $1}'`
+    nst=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $59}' | cut -d\? -f1 | wc -l | awk '{print $1}'`
     nst=$(echo ${nst} | awk '{print $1*1}')
-    strms=(`ps -ef | grep -v grep | grep ffmpeg | awk '{print $57}' | cut -d\? -f1`)
-    mbps=(`ps -ef | grep -v grep | grep ffmpeg | awk '{print $46}' | cut -d\M -f1`)
+    strms=(`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $59}' | cut -d\? -f1`)
+    mbps=(`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $46}' | cut -d\M -f1`)
     
     echo " "
 
@@ -304,14 +313,27 @@ elif [[ "$opt" == "-l" ]]; then
     exit 0
 fi
 
+clear
 echo " "
-echo "Use a -c flag to Create a stream, -d to Delete an existing stream"
-echo "or -l to List the number of existing streams"
+echo "-------------------------------------------------------------"
+echo "| Generate_Bars script version v${version}                        |"
+echo "| This script will generate a custumisable SMPTE Color Bars |"
+echo "| as a CBR MPEG-TS over UDP Stream                          |"
+echo "-------------------------------------------------------------"
 echo " "
-echo "examples: generate_bars -c dvp (VideoFlow specific)"
-echo "          generate_bars -c lnx"
+echo "Use:"
+echo "          -c to Create a stream with the option for dvp or lnx"
+echo "          -d to Delete an existing stream"
+echo "          -l to List the number of existing streams"
+echo " "
+echo "examples:"
+echo "          generate_bars -c dvp (VideoFlow specific)"
+echo "          generate_bars -c lnx (Generic Linux OS)"
 echo "          generate_bars -d"
 echo "          generate_bars -l"
+echo " "
+echo "Dependancies:"
+echo "          - FFMPEG"
 echo " "
 exit 0
 
