@@ -1,13 +1,13 @@
 #!/bin/bash
 #Maintained by Ruben Calzadilla
-#version 1.92
+#version 1.95
 #VideoFlow DVG or Linux
 #Dependancy: FFmpeg
 #Creates a UDP stream with Customized SMPTE Color Bars and one audio pair for testing
 #
 #
 
-version="1.92"
+version="1.95"
 
 #This hash value is used to make the ffmpeg command unique and therefore able to grep on the
 #FFmpeg streams created by this script only. The hash is use on a metadata statement for network id
@@ -56,7 +56,7 @@ ffmpeg_stream () {
 "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans.ttf:fontsize=42:fontcolor=white:text='%{localtime\:%H %M %S}':x=(w-text_w)/2:y=(h-text_h)/2-200",\
 "drawtext=fontfile=/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf:fontsize=92:fontcolor=${STXC}:text='${STX}':x='w-w/30*mod(t,30*(w+tw)/w)':y=(h-text_h)/2-280" \
 -filter_complex "[1:a][2:a]join=inputs=2[a0]" -map 0:v -map "[a0]" -c:v ${LibEnc} -g ${GOPS} -b:v ${MV}M -minrate ${MV}M -maxrate ${MV}M -muxrate ${MXO}M  -preset veryfast -pix_fmt yuv420p \
--metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -metadata mpegts_original_network_id="${hash}" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
+-c:a aac -b:a 128k -ar 48000 -metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -metadata mpegts_original_network_id="${hash}" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
     elif [[ $dvp -eq 0 ]]; then
 #For linux system with FFmpeg installed
         ffmpeg -re -fflags +genpts -f lavfi -i smptehdbars=size=${EncRes}:rate=${Frate} -f lavfi -i sine=frequency=440:beep_factor=4 -f lavfi -i sine=frequency=440:beep_factor=4 \
@@ -66,7 +66,7 @@ ffmpeg_stream () {
 "drawtext=fontfile=/usr/share/fonts/truetype/freefont/DejaVuSans.ttf:fontsize=42:fontcolor=white:text='%{localtime\:%H %M %S}':x=(w-text_w)/2:y=(h-text_h)/2-200",\
 "drawtext=fontfile=/usr/share/fonts/truetype/freefont/DejaVuSansBold.ttf:fontsize=92:fontcolor=${STXC}:text='${STX}':x='w-w/30*mod(t,30*(w+tw)/w)':y=(h-text_h)/2-280" \
 -filter_complex "[1:a][2:a]join=inputs=2[a0]" -map 0:v -map "[a0]" -c:v ${LibEnc} -g ${GOPS} -b:v ${MV}M -minrate ${MV}M -maxrate ${MV}M -muxrate ${MXO}M  -preset veryfast -pix_fmt yuv420p \
--metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -metadata mpegts_original_network_id="${hash}" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
+-c:a aac -b:a 128k -ar 48000 -metadata service_provider="Intelsat" -metadata service_name="Intelsat_Test" -metadata mpegts_original_network_id="${hash}" -f mpegts "udp://${IPO}:${PO}?pkt_size=1316" > /dev/null 2>&1 < /dev/null &
     fi
     
     echo " "
@@ -206,15 +206,15 @@ createStream () {
     if [[ -z ${STX} ]]; then
         STX="Intelsat"
     fi
-
+    STX=`sed 's/ /_/g' <<< ${STX}`
     echo ${STX}
+    
     echo "Scrolling text color [white] "
     printf "options: white, blue, red, black and yellow: "
     read STXC
     if [[ -z ${STXC} ]]; then
         STXC="white"
     fi
-
     echo ${STXC}
 
 
