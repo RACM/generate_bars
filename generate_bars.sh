@@ -269,9 +269,9 @@ deleteStream () {
 }
 
 listStreams () {
-    nst=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $59}' | cut -d\? -f1 | wc -l | awk '{print $1}'`
+    nst=`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $65}' | cut -d\? -f1 | wc -l | awk '{print $1}'`
     nst=$(echo ${nst} | awk '{print $1*1}')
-    strms=(`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $59}' | cut -d\? -f1`)
+    strms=(`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $65}' | cut -d\? -f1`)
     mbps=(`ps -ef | grep -v grep | grep ffmpeg | grep -e "${hash}" | awk '{print $46}' | cut -d\M -f1`)
     
     echo " "
